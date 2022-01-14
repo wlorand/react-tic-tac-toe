@@ -17,25 +17,32 @@ import './index.css';
 const Square = props => {
   return (
     <button className="square" onClick={() => props.onClick()}>
-      {props.value}
+      {props.value}{' '}
+      {/* if this is null, nothing will display, else the prop will display */}
     </button>
   );
 };
 
 // Board class to render the series of squares and the status
-class Board extends React.Component {
+// Create Local State here
+class Board extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      squares: Array(9).fill(null)
+      squares: Array(9).fill(null), // make an Array
+      xIsNext: true // boolean to hold whose turn it is
     };
   }
 
   handleClick(i) {
     // make copy of state to practice immutability
-    const squares = this.state.squares.slice();
-    squares[i] = 'O';
-    this.setState({ squares: squares });
+    //const squares = this.state.squares.slice(); // spread is better
+    const squares = [...this.state.squares];
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext
+    });
   }
 
   renderSquare(i) {
@@ -48,7 +55,22 @@ class Board extends React.Component {
   }
 
   render() {
-    const status = 'Next player: X';
+    // check for a winner of the game
+    const winner = calculateWinner(this.state.squares);
+    let status;
+
+    // conditional rendering -- refactor to be a ternary operator
+    if (winner) {
+      status = `Winner: ${winner}`;
+    } else {
+      status = `Next player: ${this.state.xIsNext ? 'Mr. X' : 'Ms O'}`;
+    }
+    // conditional rendering -- refactor to be a ternary operator
+    // eslint-disable-next-line no-unused-expressions
+    // nesterd ternary is a bit much
+    // winner
+    //   ? (status = `tWinner: ${winner}`)
+    //   : `Next player: ${this.state.xIsNext ? 'tMr. X' : 'tMr. O'}`;
 
     return (
       <div>
@@ -74,7 +96,7 @@ class Board extends React.Component {
 }
 
 // Game here is like an <App /> - renders a <Board>
-class Game extends React.Component {
+class Game extends Component {
   render() {
     return (
       <div className="game">
@@ -92,3 +114,26 @@ class Game extends React.Component {
 
 /* Render the <Game /> as like an <App /> */
 ReactDOM.render(<Game />, document.getElementById('mount-point'));
+
+// todo: move this to a helpers.js file and export the function + import it here
+// (better for project structure as well as testability!)
+// collection of squares thay win the game  -- ex: [0,1,2] is the top row
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
